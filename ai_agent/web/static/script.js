@@ -35,7 +35,7 @@ class ChatInterface {
     
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/chat`;
+        const wsUrl = `${protocol}//${window.location.host}/api/ws`;
         
         try {
             this.websocket = new WebSocket(wsUrl);
@@ -48,7 +48,7 @@ class ChatInterface {
             
             this.websocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                this.handleResponse(data);
+                this.handleWebSocketResponse(data);
             };
             
             this.websocket.onclose = () => {
@@ -101,8 +101,8 @@ class ChatInterface {
             if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
                 // Send via WebSocket
                 this.websocket.send(JSON.stringify({
-                    message: message,
-                    user_id: this.getUserId()
+                    type: "message",
+                    content: message
                 }));
             } else {
                 // Fallback to HTTP API
@@ -118,14 +118,14 @@ class ChatInterface {
     
     async sendMessageHTTP(message) {
         try {
-            const response = await fetch('/chat', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     message: message,
-                    user_id: this.getUserId()
+                    session_id: this.getUserId()
                 })
             });
             
@@ -139,6 +139,23 @@ class ChatInterface {
         } catch (error) {
             console.error('HTTP request failed:', error);
             this.showError('Failed to send message. Please try again.');
+        }
+    }
+    
+    handleWebSocketResponse(data) {
+        if (data.type === "message") {
+            this.showTyping(false);
+            this.setSendButtonState(true);
+            
+            // Add assistant response
+            this.addMessage('assistant', data.content);
+            
+            // Scroll to bottom
+            this.scrollToBottom();
+        } else if (data.type === "error") {
+            this.showError(data.message);
+            this.showTyping(false);
+            this.setSendButtonState(true);
         }
     }
     
