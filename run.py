@@ -88,7 +88,7 @@ def main():
     # Start the web server
     try:
         import uvicorn
-        from main import app
+        from ai_agent.web.api import app
         
         uvicorn.run(
             app,

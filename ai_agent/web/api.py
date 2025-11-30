@@ -5,16 +5,26 @@ Web API routes for the AI Agent
 import asyncio
 import json
 from typing import Dict, Any, List
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+import os
+from pathlib import Path
 
-from ..core.agent import AIAgent
+from ..core.agent import AIAgent, create_agent
 from ..core.base import Message
 from ..utils.logger import setup_logger
 
 # Setup logging
 logger = setup_logger("web_api")
+
+# Create FastAPI app
+app = FastAPI(
+    title="AI Agent API",
+    description="A comprehensive AI agent with tool integration",
+    version="1.0.0"
+)
 
 # Create router
 router = APIRouter()
@@ -228,3 +238,60 @@ async def get_conversation_history():
     except Exception as e:
         logger.error(f"Error getting conversation history: {e}")
         raise HTTPException(status_code=500, detail=f"Error getting history: {str(e)}")
+
+# Initialize agent on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the AI agent on startup"""
+    global agent
+    try:
+        agent = await create_agent()
+        logger.info("AI Agent initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize AI Agent: {e}")
+
+# Add routes to app
+app.include_router(router, prefix="/api")
+
+# Serve static files
+current_dir = Path(__file__).parent
+static_dir = current_dir / "static"
+templates_dir = current_dir / "templates"
+
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Serve the main page
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    """Serve the main chat interface"""
+    try:
+        index_file = templates_dir / "index.html"
+        if index_file.exists():
+            with open(index_file, 'r', encoding='utf-8') as f:
+                return HTMLResponse(content=f.read())
+        else:
+            return HTMLResponse(content="""
+            <html>
+                <head><title>AI Agent</title></head>
+                <body>
+                    <h1>AI Agent System</h1>
+                    <p>Chat interface not found. Please check the templates directory.</p>
+                    <p><a href="/docs">API Documentation</a></p>
+                </body>
+            </html>
+            """)
+    except Exception as e:
+        logger.error(f"Error serving main page: {e}")
+        return HTMLResponse(content=f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>")
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    global agent
+    return {
+        "status": "healthy",
+        "agent_initialized": agent is not None,
+        "timestamp": "2025-11-30T14:23:54.998Z"
+    }
