@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Chat Interface</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="status-indicator" title="Connected"></div>
+            <h1>AI Agent</h1>
+            <div class="subtitle">Intelligent Assistant with Tool Integration</div>
+        </div>
+        
+        <div class="chat-messages" id="messages">
+            <div class="message assistant">
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div>Hello! I'm your AI assistant. I can help you with various tasks including:</div>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Web searches and information lookup</li>
+                        <li>Mathematical calculations</li>
+                        <li>Code execution (Python, JavaScript, Bash)</li>
+                        <li>File management operations</li>
+                        <li>General conversation and assistance</li>
+                    </ul>
+                    <div>How can I help you today?</div>
+                    <div class="message-time" id="initialTime"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            AI is typing...
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="controls">
+                <button class="control-button" id="clearChat">Clear Chat</button>
+                <button class="control-button" id="resetAgent">Reset Agent</button>
+                <button class="control-button" id="showStats">Show Stats</button>
+            </div>
+            
+            <form class="chat-input-form" onsubmit="return false;">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="messageInput" 
+                    placeholder="Type your message here..." 
+                    autocomplete="off"
+                >
+                <button type="button" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+    <script>
+        // Set initial timestamp
+        document.getElementById('initialTime').textContent = new Date().toLocaleTimeString();
+    </script>
+</body>
+</html>
